@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Solver-in-the-Loop Design Search — Team Brief</title>
+<style>
+:root{
+  --ink:#0E1519; --graphite:#48565E; --mute:#78868E;
+  --paper:#F4F6F7; --card:#FFFFFF; --line:#D9E0E3; --line-soft:#E8EDEF;
+  --deep:#10606D; --signal:#C2620C;
+  --s1:#E9EDEE; --s2:#C7DADE; --s3:#92BFC5; --s4:#4A9BA7; --s5:#10606D;
+  --maxw:1180px; --prose:750px;
+  --display:Helvetica,"Helvetica Neue",Arial,sans-serif;
+  --body:Helvetica,"Helvetica Neue",Arial,sans-serif;
+  --code:"Courier New",Courier,ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+.prose{max-width:var(--prose)}
+h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-0.02em;line-height:1.14}
+p{margin:0 0 1em}p:last-child{margin-bottom:0}
+a{color:var(--deep)}
+strong{font-weight:600}
+
+.masthead{border-bottom:1px solid var(--line);background:var(--card)}
+.masthead .wrap{padding:34px 28px 38px}
+.eyebrow{font-family:var(--code);font-size:11.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+h1{font-size:clamp(38px,6.4vw,68px);font-weight:700;margin:14px 0 0}
+.tagline{font-family:var(--display);font-size:clamp(17px,2vw,21px);font-weight:700;color:var(--deep);max-width:700px;margin-top:14px;line-height:1.35;letter-spacing:-0.01em}
+.lede{font-size:clamp(16px,1.8vw,18px);color:var(--graphite);max-width:660px;margin-top:14px;line-height:1.5}
+.metabar{display:flex;flex-wrap:wrap;gap:0 40px;margin-top:32px;padding-top:20px;border-top:1px solid var(--line-soft)}
+.metabar div{font-family:var(--code);font-size:12px;color:var(--mute);letter-spacing:.04em}
+.metabar b{display:block;color:var(--ink);font-weight:500;font-size:13px;margin-top:3px;letter-spacing:0}
+
+.thesis{background:var(--ink);color:#E7EEEF}
+.thesis .wrap{padding:56px 28px 60px}
+.thesis .k{font-family:var(--code);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:#7FA6AD}
+.thesis p.big{font-family:var(--display);font-weight:600;font-size:clamp(21px,3.1vw,31px);line-height:1.3;letter-spacing:-0.02em;max-width:940px;margin:18px 0 0}
+.thesis em{font-style:normal;color:#5FC6D6}
+.thesis .sm{max-width:720px;margin-top:24px;color:#A9BEC2;font-size:16.5px}
+.thesis .sm b{color:#E7EEEF;font-weight:600}
+
+section{padding:64px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:none}
+.shead{display:flex;gap:18px;align-items:baseline;margin-bottom:28px}
+.snum{font-family:var(--code);font-size:12px;font-weight:500;color:var(--mute);padding-top:6px;flex:0 0 auto}
+h2{font-size:clamp(25px,3.2vw,34px);font-weight:700}
+.sub{color:var(--graphite);margin-top:8px;max-width:var(--prose)}
+h3{font-size:19px;font-weight:700;margin-bottom:6px}
+h4{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.two > div{background:var(--card);padding:26px 24px}
+.two h3{margin-bottom:12px}
+.two.neg > div:last-child{background:#FBFAF8}
+
+.crit{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.crit > div{background:var(--card);padding:22px 20px}
+.crit .tag{font-family:var(--code);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--deep)}
+.crit h3{font-size:17px;margin:10px 0 6px}
+.crit p{font-size:14.5px;color:var(--graphite);line-height:1.5}
+.crit .anch{margin-top:12px;padding-top:10px;border-top:1px solid var(--line-soft);font-family:var(--code);font-size:11.5px;color:var(--mute);line-height:1.6}
+.crit .anch b{color:var(--ink);font-weight:500}
+
+.formula{background:var(--ink);color:#DCE6E8;font-family:var(--code);font-size:14px;padding:16px 20px;margin:24px 0 0;overflow-x:auto;white-space:nowrap}
+.formula span{color:#5FC6D6}
+
+.controls{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:18px 20px;background:var(--card);border:1px solid var(--line);border-bottom:none}
+.wctl{display:flex;flex-direction:column;gap:7px}
+.wctl label{font-family:var(--code);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:24px;height:24px;border:1px solid var(--line);background:var(--paper);color:var(--graphite);border-radius:2px;cursor:pointer;font-size:14px;line-height:1;font-family:var(--code)}
+.stepper button:hover:not(:disabled){border-color:var(--deep);color:var(--deep)}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper .val{font-family:var(--code);font-size:14px;font-weight:600;min-width:14px;text-align:center}
+.reset{margin-left:auto;align-self:center;background:none;border:none;cursor:pointer;font-family:var(--code);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-decoration:underline;padding:4px}
+.reset:hover{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:14px 20px;background:var(--card);border:1px solid var(--line);border-bottom:none;border-top:1px solid var(--line-soft)}
+.chip{font-family:var(--code);font-size:11px;letter-spacing:.05em;padding:4px 10px;border:1px solid var(--line);background:var(--paper);color:var(--graphite);cursor:pointer;border-radius:2px}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.tscroll{overflow-x:auto;border:1px solid var(--line);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:940px}
+th,td{text-align:left;padding:0;font-size:14px}
+thead th{font-family:var(--code);font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:bottom;white-space:nowrap}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--ink)}
+thead th[aria-sort]:not([aria-sort="none"]){color:var(--ink)}
+thead th .arrow{opacity:.5;font-size:9px}
+tbody tr.row{border-bottom:1px solid var(--line-soft);cursor:pointer}
+tbody tr.row:hover{background:#F7FAFA}
+tbody tr.row.open{background:#EEF4F5}
+td.name{padding:11px 10px 11px 14px;min-width:265px}
+td.name .t{font-weight:600;font-size:15px;display:block;line-height:1.3}
+td.name .n{font-size:13px;color:var(--mute);line-height:1.4;display:block;margin-top:2px;padding-left:16px}
+td.name .car{display:inline-block;font-family:var(--code);font-size:9px;color:var(--mute);width:16px;transition:transform .15s}
+tr.open td.name .car{transform:rotate(90deg);color:var(--deep)}
+td.dom{padding:11px 10px;font-family:var(--code);font-size:11px;color:var(--graphite);white-space:nowrap}
+td.sc{width:48px;text-align:center;font-family:var(--code);font-size:13px;font-weight:500;padding:0}
+td.sc span{display:block;padding:11px 0}
+td.tot{width:100px;padding:11px 14px 11px 10px}
+.bar{height:5px;background:var(--line-soft);position:relative;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--deep)}
+.totnum{font-family:var(--code);font-size:13px;font-weight:600}
+.pick{display:inline-block;font-family:var(--code);font-size:9.5px;letter-spacing:.1em;background:var(--signal);color:#fff;padding:2px 5px;margin-left:7px;vertical-align:2px;border-radius:2px}
+tr.is-pick{background:#FCF7F1}
+tr.is-pick:hover{background:#F8F0E7}
+
+tr.detail > td{padding:0;background:#F9FBFB;border-bottom:1px solid var(--line)}
+.dpanel{padding:22px 24px 24px 34px;border-left:3px solid var(--deep)}
+.dpanel .dh{font-family:var(--display);font-size:18px;font-weight:700;margin-bottom:14px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:20px}
+.dgrid .f h4{margin-bottom:5px}
+.dgrid .f p{font-size:14.5px;color:var(--graphite);line-height:1.55;margin:0}
+.dgrid .f.risk h4{color:var(--signal)}
+.dscores{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft);font-family:var(--code);font-size:11.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:14px}
+.dscores b{color:var(--ink);font-weight:600}
+
+.legend{display:flex;gap:16px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.legend .sw{display:flex;align-items:center;gap:5px;font-family:var(--code);font-size:11px;color:var(--mute)}
+.legend .sw i{width:16px;height:10px;display:block}
+.hint{font-size:13.5px;color:var(--mute);margin-top:10px;max-width:var(--prose)}
+
+.picks{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.pcard{background:var(--card);padding:28px 26px;display:grid;grid-template-columns:155px 1fr;gap:28px}
+.pcard .side .rank{font-family:var(--display);font-size:44px;font-weight:800;line-height:1;color:var(--deep)}
+.pcard .side .lab{font-family:var(--code);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-top:6px}
+.pcard .side .who{font-size:14px;color:var(--graphite);margin-top:16px;line-height:1.45}
+.pcard h3{font-size:22px}
+.pcard .body p{font-size:16px;color:var(--graphite)}
+.pcard .body p strong{color:var(--ink)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:16px}
+.split .box{border-left:2px solid var(--line);padding-left:14px}
+.split .box.risk{border-left-color:var(--signal)}
+.split .box p{font-size:15px;margin:0}
+.live{display:inline-block;font-family:var(--code);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--deep);color:#fff;padding:2px 7px;border-radius:2px;vertical-align:2px;margin-right:8px}
+.pcard .bench{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:14px;color:var(--mute)}
+.pcard .bench b{font-family:var(--code);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-right:8px}
+.pcard .side .scr{font-family:var(--code);font-size:11px;color:var(--graphite);margin-top:14px;line-height:1.7}
+.pcard .side .scr b{color:var(--ink)}
+
+.gates{display:grid;grid-template-columns:38px 1.2fr 1.4fr 1fr;background:var(--line);border:1px solid var(--line);gap:1px}
+.gates > div{background:var(--card);padding:12px 14px;font-size:14.5px;color:var(--graphite);line-height:1.45}
+.gates > div.hd{font-family:var(--code);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:11px 14px}
+.gates > div.st{font-family:var(--code);font-size:12px;color:var(--mute)}
+.gates > div.nm{color:var(--ink);font-weight:700;font-family:var(--display)}
+.gates .never{color:var(--signal);font-weight:700}
+.gates .auto{color:var(--deep);font-weight:700}
+.pattern{margin-top:16px;padding:16px 20px;background:var(--ink);color:#DCE6E8;font-family:var(--display);font-weight:700;font-size:clamp(16px,2vw,19px);letter-spacing:-0.01em}
+.pattern em{font-style:normal;color:#5FC6D6}
+@media (max-width:760px){
+  .gates{grid-template-columns:32px 1fr}
+  .gates > div.hd:nth-child(3),.gates > div.hd:nth-child(4){display:none}
+  .gates > div:nth-child(4n+3),.gates > div:nth-child(4n){grid-column:2}
+}
+.pipe{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:14px}
+.pipe > div{background:var(--card);padding:16px 14px}
+.pipe .st{font-family:var(--code);font-size:10px;letter-spacing:.1em;color:var(--mute)}
+.pipe h4{font-size:14px;text-transform:none;letter-spacing:0;color:var(--ink);margin:6px 0 4px;font-weight:700}
+.pipe p{font-size:13px;color:var(--graphite);line-height:1.4}
+.pipe .who{font-family:var(--code);font-size:10px;color:var(--deep);margin-top:8px;letter-spacing:.05em}
+
+.steps{border-top:1px solid var(--line)}
+.step{display:grid;grid-template-columns:120px 1fr 230px;gap:24px;padding:20px 0;border-bottom:1px solid var(--line-soft);align-items:start}
+.step .w{font-family:var(--code);font-size:11.5px;color:var(--mute);letter-spacing:.06em;padding-top:3px}
+.step h3{font-size:17px;margin-bottom:4px}
+.step p{font-size:15px;color:var(--graphite);margin:0}
+.step .out{font-size:14px;color:var(--graphite);border-left:2px solid var(--deep);padding-left:12px}
+.step .out b{display:block;font-family:var(--code);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500;margin-bottom:3px}
+
+.money{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.money > div{background:var(--card);padding:22px 20px}
+.money .amt{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-0.02em}
+.money .src{font-family:var(--code);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:4px}
+.money p{font-size:14.5px;color:var(--graphite);margin-top:12px;line-height:1.5}
+
+ul.tight{margin:0;padding-left:19px}
+ul.tight li{margin-bottom:8px;color:var(--graphite)}
+ul.tight li:last-child{margin-bottom:0}
+ul.tight li strong{color:var(--ink)}
+
+.rp{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.rp > div{background:var(--card);padding:26px 24px}
+.rp .hd{font-family:var(--code);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+.rp .risks .hd{color:var(--signal)}
+.rp .pots .hd{color:var(--deep)}
+.rp .item{padding:14px 0;border-top:1px solid var(--line-soft)}
+.rp .item:first-of-type{border-top:none;padding-top:0}
+.rp .item h3{font-size:16px;margin-bottom:4px}
+.rp .item p{font-size:14.5px;color:var(--graphite);margin:0;line-height:1.5}
+
+.kill{border:1px solid var(--ink);background:var(--card);padding:26px}
+.kill .rule{font-family:var(--display);font-size:clamp(18px,2.4vw,23px);font-weight:600;line-height:1.35;letter-spacing:-0.01em;max-width:840px}
+.kill .then{margin-top:14px;font-size:15.5px;color:var(--graphite);max-width:720px}
+
+.qs{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:20px}
+.q{border-top:2px solid var(--ink);padding-top:12px}
+.q p{font-size:15.5px;color:var(--graphite)}
+.q .qn{font-family:var(--code);font-size:11px;color:var(--mute);letter-spacing:.1em;margin-bottom:6px}
+
+footer{padding:36px 0 60px;color:var(--mute);font-family:var(--code);font-size:11.5px;letter-spacing:.06em}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+@media (max-width:900px){
+  .two,.rp{grid-template-columns:1fr}
+  .pcard{grid-template-columns:1fr;gap:16px}
+  .pipe{grid-template-columns:repeat(2,1fr)}
+  .step{grid-template-columns:1fr;gap:10px}
+  .step .out{border-left:none;border-top:2px solid var(--deep);padding:10px 0 0}
+  .split{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap{padding:0 18px}
+  section{padding:46px 0}
+  .shead{flex-direction:column;gap:4px}
+  .pipe{grid-template-columns:1fr}
+  .dpanel{padding:18px 16px 20px 18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media print{
+  .controls,.chips{display:none}
+  body{background:#fff;font-size:11pt}
+  section{page-break-inside:avoid;padding:24px 0}
+  .tscroll{overflow:visible}
+  table{min-width:0}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Team brief · Company direction · Working title, not a name</div>
+    <h1>Solver-in-the-Loop Design Search</h1>
+    <p class="tagline">Semi-automated exploration of engineering design spaces, judged by the customer's own solver, with the engineer kept in the loop at the gates that matter.</p>
+    <p class="lede">A closed loop that proposes candidate geometries, runs them through a validated simulator, discards anything unbuildable, and returns a design package with the evidence behind it. Aimed at problems currently explored by hand, a few dozen candidates at a time.</p>
+    <div class="metabar">
+      <div>Status<b>Draft for discussion</b></div>
+      <div>Decision needed<b>Pick one problem</b></div>
+      <div>Candidates screened<b>50</b></div>
+      <div>Shortlist<b>3</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="thesis">
+  <div class="wrap">
+    <div class="k">The bet</div>
+    <p class="big">Engineers are not short of judgement. They are short of <em>throughput</em>. A design study explores tens of candidates, because each one costs a person a day of setup, meshing, debugging and interpretation. We run the same study ten thousand times, in their solver, against their metric, inside their constraints.</p>
+    <p class="sm"><b>We never claim to be the better engineer.</b> That argument cannot be won in a meeting and should not be attempted. We claim more coverage of the design space, and we let their own solver decide who found the better part. The customer keeps the physics, the sign-off and the credit.</p>
+  </div>
+</div>
+
+<main class="wrap">
+
+<section id="agent">
+  <div class="shead"><div class="snum">01</div><div>
+    <h2>Division of labour</h2>
+    <p class="sub">Choosing the next design point is not where the time goes. In a real design study the numerical search is a small slice of the effort; the rest is deciding what to vary, building the model, keeping the solver from failing, and judging whether a result means anything.</p>
+  </div></div>
+
+  <div class="prose" style="margin-bottom:26px">
+    <p>That surrounding work is manual today, and it is what caps a study at a few dozen evaluations. It is also the part nobody has automated, which is where the opening is.</p>
+    <p>So the split is explicit and stated up front. <strong>Classical numerics does the searching. The agent does everything around it.</strong> Bayesian optimisation, evolutionary methods and adjoint gradients are used wherever they are the right tool, and we say so rather than dressing them up.</p>
+  </div>
+
+  <div class="two neg">
+    <div>
+      <h3>Where an agent earns its place</h3>
+      <ul class="tight">
+        <li><strong>Formulation.</strong> Turning a loose goal into a parameterisation, objective and constraint set. This choice decides the answer more than the optimiser does, and no optimiser can make it.</li>
+        <li><strong>Restructuring the space.</strong> Bayesian optimisation cannot add a design variable. An agent can propose a different topology class, an extra fin row, a different coil count, then hand the new space back to the optimiser.</li>
+        <li><strong>Keeping the loop alive.</strong> Meshing failures, divergence, bad boundary conditions. A grid search dies here. This is the largest time sink in practice.</li>
+        <li><strong>Sanity.</strong> Spotting that a result is mesh-dependent, unconverged, or outside the model assumptions.</li>
+        <li><strong>Portability.</strong> Reading a new solver interface and writing the adapter. This is why we can move between problems instead of being one-trick.</li>
+        <li><strong>Search over structure.</strong> Program and topology space, where FunSearch and AlphaEvolve showed real gains over hand design.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Where it does not</h3>
+      <ul class="tight">
+        <li><strong>Continuous, low-dimensional, smooth problems.</strong> Bayesian optimisation and gradient methods win. Published results on language models as numerical optimisers are mixed at best.</li>
+        <li><strong>Anything a grid already solves.</strong> If a clean grid over a well-defined space answers the question, the problem was already formulated, and formulation was the hard part. Those are not our customers.</li>
+        <li><strong>Reinforcement learning.</strong> RL pays off when the same problem is solved thousands of times. Every customer geometry differs, so training cost does not amortise. Only worth it inside one narrow, repeated problem class.</li>
+        <li><strong>Rewriting a validated solver core.</strong> Out of scope by design. See below.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="prose" style="margin-top:30px">
+    <h3 style="margin-bottom:10px">Where the agent touches the solver itself</h3>
+    <p>There is a narrow band where the agent improves the solve rather than just calling it: writing custom boundary conditions and user functions, selecting preconditioners and mesh adaptation strategies, generating problem-specific reduced-order models. Outside that band, and specifically for the validated core, it does not touch anything. Nobody would sign a drawing produced by a finite element code written last week.</p>
+    <p>The highest-value version is quieter than rewriting anything. <strong>Train a fast surrogate on the customer's own solver runs.</strong> That is a solver improvement in effect: it turns a twenty-minute solve into a millisecond one, which is what unlocks the ten thousand evaluations. It also produces an asset a competitor cannot copy, because it is fitted to their geometry family and their settings.</p>
+  </div>
+</section>
+
+<section id="human">
+  <div class="shead"><div class="snum">02</div><div>
+    <h2>Where the human sits</h2>
+    <p class="sub">The loop is built to run with a person in it, and to keep running as that person steps back. Autonomy is a setting on each gate, not a property of the system. Nothing here is designed to remove the engineer; it is designed to stop spending them on work that does not need judgement.</p>
+  </div></div>
+
+  <h4>Six stages, six gates</h4>
+  <div class="gates">
+    <div class="hd"></div><div class="hd">Stage</div><div class="hd">Who decides</div><div class="hd">Fully automatic?</div>
+
+    <div class="st">A</div><div class="nm">Problem spec</div>
+    <div>The engineer owns the objective, the constraints and what is off-limits. The agent drafts it; a person signs it.</div>
+    <div class="never">Never</div>
+
+    <div class="st">B</div><div class="nm">Design space</div>
+    <div>Agent proposes a parameterisation. Engineer edits or rejects it. This is where tacit knowledge enters the run.</div>
+    <div>After the problem class is settled</div>
+
+    <div class="st">C</div><div class="nm">Solver setup</div>
+    <div>Engineer validates mesh independence and boundary conditions once. Reusable across every later run of the same class.</div>
+    <div>After first validation</div>
+
+    <div class="st">D</div><div class="nm">Search</div>
+    <div>No human value added per iteration. A person watching an optimiser converge is a person being wasted.</div>
+    <div class="auto">From day one</div>
+
+    <div class="st">E</div><div class="nm">Checker</div>
+    <div>Rules run automatically. Anything ambiguous is escalated rather than quietly passed. Saying "unsure" is a valid output.</div>
+    <div>Rules yes, edge cases escalate</div>
+
+    <div class="st">F</div><div class="nm">Package</div>
+    <div>Engineer reviews the design, the reasoning trail and the rejected alternatives, then signs.</div>
+    <div class="never">Never</div>
+  </div>
+  <div class="pattern">The ends stay human. <em>The middle automates.</em></div>
+
+  <h4 style="margin-top:40px">Autonomy ladder</h4>
+  <p class="sub" style="margin-bottom:18px">A customer starts at the top and moves down as evidence accumulates. Each level has an entry condition, so advancing is earned rather than argued.</p>
+  <div class="steps">
+    <div class="step"><div class="w">L0 · Assisted</div>
+      <div><h3>Engineer drives</h3><p>They run the study as they do today. The system suggests candidates and flags constraint violations alongside them.</p></div>
+      <div class="out"><b>To advance</b>Solver adapter runs headless without failures</div></div>
+    <div class="step"><div class="w">L1 · Supervised</div>
+      <div><h3>System runs, human approves each gate</h3><p>Every stage stops and waits. Slow, and the right place to start with a customer who has never seen this work.</p></div>
+      <div class="out"><b>To advance</b>Twenty consecutive gate approvals with no correction</div></div>
+    <div class="step"><div class="w">L2 · Batched</div>
+      <div><h3>Overnight runs, morning review</h3><p>The loop runs unattended and presents a digest. The engineer reviews decisions in one sitting instead of one at a time.</p></div>
+      <div class="out"><b>To advance</b>False-pass rate under threshold on a held-out set</div></div>
+    <div class="step"><div class="w">L3 · Exception-only</div>
+      <div><h3>Engineer sees only what is flagged</h3><p>The checker decides what deserves attention. Everything clean passes through. This is where the throughput claim actually lands.</p></div>
+      <div class="out"><b>To advance</b>Three studies with no defect escaping to the customer</div></div>
+    <div class="step"><div class="w">L4 · Unattended</div>
+      <div><h3>Spec in, package out</h3><p>The loop runs end to end against a signed spec. Note what has not changed: a person wrote the spec and a person signs the drawing. There is no level where nobody is accountable.</p></div>
+      <div class="out"><b>Ceiling</b>Not a goal for every customer. Many will sit at L2 forever and be happy.</div></div>
+  </div>
+
+  <div class="two" style="margin-top:40px">
+    <div>
+      <h3>The interaction budget</h3>
+      <p>Human attention is the scarce resource in this system, not compute. Nobody can review ten thousand designs. Reviewing the parameterisation once takes twenty minutes and changes all ten thousand.</p>
+      <p>So the design rule is to spend review where leverage per minute is highest: heavy at stage A and B, near zero at D, selective at E. Escalations are batched, ranked by consequence, and rare by default. An interface that interrupts an engineer forty times a day has destroyed the thing it was built to deliver.</p>
+      <p><strong>Tracked:</strong> interventions per validated design. It should fall run over run. If it is flat, the system is not learning anything from the person using it.</p>
+    </div>
+    <div>
+      <h3>Judgement goes back in, not just out</h3>
+      <p>An override that only fixes the design in front of it is wasted. Every correction is captured as a rule in the constraint library, so it is enforced on the next ten thousand candidates rather than caught by eye on one.</p>
+      <p>An engineer saying that fin spacing will not braze is worth more than the design they rejected. That sentence becomes a filter. Over a few engagements the library accumulates the manufacturing knowledge that is currently held in people's heads and nowhere else.</p>
+      <p><strong>This is also the promotion mechanism.</strong> A gate earns automation when captured judgement makes it reliable, which is a measurable event rather than a decision someone has to feel comfortable with.</p>
+    </div>
+  </div>
+
+  <div class="prose" style="margin-top:34px">
+    <h3 style="margin-bottom:10px">Two ways the human loop fails</h3>
+    <ul class="tight">
+      <li><strong>Rubber stamping.</strong> The engineer approves everything without reading it, and review becomes theatre while everyone believes there is oversight. Watch the override rate: if it sits near zero, either the system is genuinely good or nobody is looking, and those two need to be told apart deliberately.</li>
+      <li><strong>Bottlenecking.</strong> The person becomes the rate limiter and the throughput gain evaporates. A loop that evaluates ten thousand designs but needs a human decision every fifty has delivered nothing. Watch queue time per gate.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="ranking">
+  <div class="shead"><div class="snum">03</div><div>
+    <h2>How we rank problems</h2>
+    <p class="sub">Six criteria, scored 1 to 5. The point is not that the numbers are true. The point is that disagreement becomes a disagreement about a specific score or weight, which can be settled.</p>
+  </div></div>
+
+  <div class="crit">
+    <div><div class="tag">Oracle</div><h3>Solver quality</h3>
+      <p>Is there a validated simulator that runs fast enough to be called thousands of times?</p>
+      <div class="anch"><b>1</b> only a lab can tell you<br><b>5</b> validated code, seconds per run</div></div>
+    <div><div class="tag">Loop</div><h3>Cost to close</h3>
+      <p>What does it take to confirm a win is real? Simulation alone, a printed part, or a five-year test campaign?</p>
+      <div class="anch"><b>1</b> years and a test rig<br><b>5</b> confirmed in software</div></div>
+    <div><div class="tag">Value</div><h3>Worth per design</h3>
+      <p>What one good design is worth to the buyer. Sets the ceiling on price.</p>
+      <div class="anch"><b>1</b> low five figures<br><b>5</b> eight figures or more</div></div>
+    <div><div class="tag">Search</div><h3>Manual pain today</h3>
+      <p>How much of this is a person hand-tuning coupled parameters right now. Small spaces need no help.</p>
+      <div class="anch"><b>1</b> already automated<br><b>5</b> spreadsheet and intuition</div></div>
+    <div><div class="tag">Proof</div><h3>Provability</h3>
+      <p>Can we beat their baseline on their metric in their solver, in front of them, in weeks?</p>
+      <div class="anch"><b>1</b> no agreed metric<br><b>5</b> clean head-to-head</div></div>
+    <div><div class="tag">Access</div><h3>Reachability</h3>
+      <p>Can we get a real problem, real data and a real buyer without a clearance or a year of procurement?</p>
+      <div class="anch"><b>1</b> classified or closed<br><b>5</b> open data, fast buyers</div></div>
+  </div>
+
+  <div class="formula">score = 100 &times; &Sigma; ( <span>criterion</span> &times; <span>weight</span> ) / &Sigma; ( 5 &times; <span>weight</span> )</div>
+
+  <div class="prose" style="margin-top:30px">
+    <h3 style="margin-bottom:10px">Method, and what is wrong with it</h3>
+    <ul class="tight">
+      <li><strong>Weights encode strategy, not truth.</strong> Defaults are 3 / 3 / 2 / 2 / 3 / 2. Oracle, Loop and Proof carry the most weight because they govern whether we can show anything at all. Change them in the matrix and watch the order move. That is the intended use.</li>
+      <li><strong>The scores are judgement, not measurement.</strong> Each of us should re-score the top ten independently. Where two of us differ by two points, that row needs a phone call with someone in the field, not another discussion.</li>
+      <li><strong>The criteria are not independent.</strong> Loop and Proof correlate strongly. A problem cheap to verify is usually easy to prove. Treat them as one axis with two readings rather than two votes.</li>
+      <li><strong>Three things are missing on purpose.</strong> Market size, competitive density, and how much we want to work on it. All three are real. None fit a 1 to 5 scale honestly, so they belong in the discussion instead of the sum.</li>
+      <li><strong>High value plus low loop is the classic trap.</strong> Hypersonics, breeding blankets and new alloys all score 5 on value and 1 on closing the loop. They read as exciting and cannot be proven.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="matrix">
+  <div class="shead"><div class="snum">04</div><div>
+    <h2>Candidate matrix</h2>
+    <p class="sub">Fifty problems. Click any row for what it is, why it fits, the benchmark it would be measured against, the proof point and the main risk. Click a column to sort. Adjust the weights to re-rank; the three rows tagged PICK are always the current top three, and the shortlist below follows them.</p>
+  </div></div>
+
+  <div class="controls" id="weights"></div>
+  <div class="chips" id="chips"></div>
+  <div class="tscroll">
+    <table id="matrix">
+      <thead>
+        <tr>
+          <th>Problem</th><th>Domain</th>
+          <th class="sortable" data-k="oracle" tabindex="0" role="button">Oracle</th>
+          <th class="sortable" data-k="loop" tabindex="0" role="button">Loop</th>
+          <th class="sortable" data-k="value" tabindex="0" role="button">Value</th>
+          <th class="sortable" data-k="search" tabindex="0" role="button">Search</th>
+          <th class="sortable" data-k="proof" tabindex="0" role="button">Proof</th>
+          <th class="sortable" data-k="access" tabindex="0" role="button">Access</th>
+          <th class="sortable" data-k="total" aria-sort="descending" tabindex="0" role="button">Score</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span class="sw"><i style="background:var(--s1)"></i>1 poor</span>
+    <span class="sw"><i style="background:var(--s2)"></i>2</span>
+    <span class="sw"><i style="background:var(--s3)"></i>3</span>
+    <span class="sw"><i style="background:var(--s4)"></i>4</span>
+    <span class="sw"><i style="background:var(--s5)"></i>5 strong</span>
+  </div>
+  <p class="hint">Where a row says no standard benchmark exists, that is both the risk and the opening. A field with no public scoreboard is a field where nobody can prove they are better, including the incumbents.</p>
+</section>
+
+<section id="picks">
+  <div class="shead"><div class="snum">05</div><div>
+    <h2>The three to start with</h2>
+    <p class="sub"><span class="live">Live</span> This shortlist is the current top three of the matrix above. Change the weights and it changes with them. Ordered by score, which favours what we can prove quickly over what is most interesting.</p>
+  </div></div>
+  <div class="picks" id="picks"></div>
+  <p class="hint">If a weighting produces a shortlist nobody in the room believes, the weighting is wrong or a score is wrong. Fix the input rather than overriding the output.</p>
+</section>
+
+<section id="mvp">
+  <div class="shead"><div class="snum">06</div><div>
+    <h2>MVP structure</h2>
+    <p class="sub">One problem, one customer geometry, one metric. The architecture is the same whichever candidate we pick, which is why we can afford to be wrong once.</p>
+  </div></div>
+
+  <h4>Pipeline</h4>
+  <div class="pipe">
+    <div><div class="st">A</div><h4>Problem spec</h4><p>Objective, constraints and manufacturing limits in one readable file.</p><div class="who">Gate A · human signs</div></div>
+    <div><div class="st">B</div><h4>Generator</h4><p>Parametric geometry or topology. Every sample valid by construction.</p><div class="who">Gate B · human approves</div></div>
+    <div><div class="st">C</div><h4>Solver adapter</h4><p>Headless meshing and solve. One clean interface per solver.</p><div class="who">Gate C · validated once</div></div>
+    <div><div class="st">D</div><h4>Search</h4><p>Surrogate plus optimiser. Bayesian, evolutionary or adjoint, whichever suits.</p><div class="who">Gate D · automatic</div></div>
+    <div><div class="st">E</div><h4>Checker</h4><p>Constraint and convergence gate. Rejects unbuildable or unconverged results.</p><div class="who">Gate E · escalates</div></div>
+    <div><div class="st">F</div><h4>Package</h4><p>Geometry, results, comparison to baseline and the reasoning trail.</p><div class="who">Gate F · human signs</div></div>
+  </div>
+  <p class="hint">Stages C and E are the moat. Anyone can wire a model to an optimiser. Encoding what a supplier can actually make, and knowing when a solve is lying to you, is the part that takes a year to copy.</p>
+
+  <h4 style="margin-top:38px">Build order</h4>
+  <div class="steps">
+    <div class="step"><div class="w">Weeks 1–3</div>
+      <div><h3>Benchmark first</h3><p>Collect five real published or partner designs with known performance. These become the scoreboard. Nothing else gets built until we can measure against them.</p></div>
+      <div class="out"><b>Output</b>Benchmark suite with human baselines</div></div>
+    <div class="step"><div class="w">Weeks 3–6</div>
+      <div><h3>Dumb loop, end to end</h3><p>Script the whole pipeline with no intelligence in it. Random or Latin hypercube sampling only. The goal is a headless solve that runs unattended overnight without dying.</p></div>
+      <div class="out"><b>Output</b>One command, valid results by morning</div></div>
+    <div class="step"><div class="w">Weeks 6–10</div>
+      <div><h3>Surrogate, then search</h3><p>Train a surrogate on the overnight runs, then run Bayesian or gradient-based optimisation on top. Add the agent layer only where it measurably beats the plain optimiser.</p></div>
+      <div class="out"><b>Output</b>Beat the benchmark on three of five cases</div></div>
+    <div class="step"><div class="w">Weeks 10–13</div>
+      <div><h3>Constraint library</h3><p>Encode the manufacturing rules a real supplier applies. Re-run the benchmark with constraints on and record how much of the win survives. That number is the honest one.</p></div>
+      <div class="out"><b>Output</b>Designs a shop will quote without redrawing</div></div>
+    <div class="step"><div class="w">Weeks 12–16</div>
+      <div><h3>Deliverable and demo</h3><p>Auto-generated design report with side-by-side comparison. Plus one physical or third-party validated result if the part can be made in time.</p></div>
+      <div class="out"><b>Output</b>Something we can put in front of a buyer</div></div>
+  </div>
+
+  <div class="prose" style="margin-top:32px">
+    <h3 style="margin-bottom:10px">One number we track from week one</h3>
+    <p><strong>Validated designs per GPU-hour.</strong> Not model quality, not agent autonomy. Every architectural choice — surrogate accuracy, mesh coarsening, early stopping, cheap screening before expensive solves — is judged by whether it moves that number. It is also the number that transfers if we ever change domain.</p>
+  </div>
+</section>
+
+<section id="funding">
+  <div class="shead"><div class="snum">07</div><div>
+    <h2>Funding plan</h2>
+    <p class="sub">Non-dilutive money first, because it is priced in paperwork rather than equity, and a paid pilot is the strongest signal we can show an investor.</p>
+  </div></div>
+  <div class="money">
+    <div><div class="amt">Track A</div><div class="src">Public grants</div>
+      <p>EXIST Gründerstipendium and NRW state programmes for the build period. EIC Accelerator and Eurostars for the round after. Deep-tech hardware fits these schemes better than most software.</p></div>
+    <div><div class="amt">Track B</div><div class="src">Paid pilots</div>
+      <p>Two design studies at a fixed fee each. Revenue is small; the value is a reference customer, a real constraint set, and proof someone pays.</p></div>
+    <div><div class="amt">Track C</div><div class="src">Pre-seed equity</div>
+      <p>Deep-tech angels and seed funds once the benchmark result exists. Approach with a measured win, not a deck. HTGF and comparable European deep-tech funds are the natural first calls.</p></div>
+    <div><div class="amt">Track D</div><div class="src">Institutional access</div>
+      <p>A research collaboration with a lab or institute buys compute, credibility and solver expertise for the price of a joint publication.</p></div>
+  </div>
+  <div class="prose" style="margin-top:34px">
+    <h3 style="margin-bottom:10px">Sequence</h3>
+    <ul class="tight">
+      <li><strong>Apply while building.</strong> Applications need the benchmark plan, not the benchmark result.</li>
+      <li><strong>Land the first pilot before the round.</strong> One signed study changes every investor conversation.</li>
+      <li><strong>Raise on a measured number.</strong> Beating their design by a stated margin, in their solver, is the only slide that matters.</li>
+      <li><strong>Keep the raise small.</strong> We need compute and solver licences, not headcount.</li>
+      <li><strong>Check the licence bill early.</strong> Per-core commercial solver pricing can make large sweeps uneconomic. Favour open-source solvers, or run on the customer's own licences.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="gtm">
+  <div class="shead"><div class="snum">08</div><div>
+    <h2>Go to market</h2>
+    <p class="sub">Sell the outcome before the software. Productise only after we have won the same comparison three times.</p>
+  </div></div>
+  <div class="steps">
+    <div class="step"><div class="w">Stage 1</div>
+      <div><h3>Design as a service</h3><p>We run the loop ourselves and deliver a validated design package at a fixed fee. Slow to scale, but it pays, and it teaches us which constraints actually bind.</p></div>
+      <div class="out"><b>Signal to watch</b>Do they ask for a second study?</div></div>
+    <div class="step"><div class="w">Stage 2</div>
+      <div><h3>The bake-off</h3><p>Standard entry motion. The customer names a part they are proud of and a metric. We get two weeks. Beating a design an engineer defends in person is worth more than any demo.</p></div>
+      <div class="out"><b>Signal to watch</b>Win rate across three attempts</div></div>
+    <div class="step"><div class="w">Stage 3</div>
+      <div><h3>Deployed tool</h3><p>Same pipeline, run by their engineers on their infrastructure, priced per seat with a compute component. Only after service work has hardened the constraint library.</p></div>
+      <div class="out"><b>Signal to watch</b>Runs per week without us in the room</div></div>
+  </div>
+  <div class="prose" style="margin-top:32px">
+    <h3 style="margin-bottom:10px">How we reach people</h3>
+    <ul class="tight">
+      <li><strong>Publish the benchmark.</strong> An open comparison set with our results on it is the cheapest credibility available, and it makes competitors argue on our terms.</li>
+      <li><strong>Go where the engineers are.</strong> Domain conferences and technical workshops, not startup events. The buyer is a principal engineer, and they read papers.</li>
+      <li><strong>Start with the desperate.</strong> Teams already missing a thermal or schedule target will run a pilot in weeks. Comfortable teams take a year.</li>
+      <li><strong>Partner with the fabricator.</strong> The shop that makes the part wants better designs to quote, and already has the customer list.</li>
+      <li><strong>Sell the trail, not just the answer.</strong> Engineers reject black boxes because they have to defend the design. Ship the reasoning, the rejected alternatives and the convergence evidence alongside the geometry.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="rp">
+  <div class="shead"><div class="snum">09</div><div>
+    <h2>Risks and potential</h2>
+    <p class="sub">What kills this, and what it becomes if it works.</p>
+  </div></div>
+  <div class="rp">
+    <div class="risks">
+      <div class="hd">What kills it</div>
+      <div class="item"><h3>The trust gap</h3><p>An engineer has to sign the drawing. If they cannot explain why the geometry looks the way it does, they will not sign, and a 20% win becomes a slide nobody acts on.</p></div>
+      <div class="item"><h3>The simulation-to-reality gap</h3><p>A 15% gain in CFD can be 3% on a rig. If our wins live only inside the model, we are selling optimism. Physical validation belongs in the first pilot, not the third.</p></div>
+      <div class="item"><h3>Incumbents already ship optimisation</h3><p>The large simulation vendors have optimisation modules, and several well-funded companies sell surrogate-based design today. We need a wedge they structurally cannot copy, which is the manufacturing constraint library, not the model.</p></div>
+      <div class="item"><h3>Solver economics</h3><p>Per-core commercial licences make large sweeps expensive. If the search costs more than the engineer it replaces, there is no business.</p></div>
+      <div class="item"><h3>Access to real problems</h3><p>The most valuable problems sit behind export control, NDAs or a year of procurement. We can be right about the technology and never see a real geometry.</p></div>
+      <div class="item"><h3>Becoming a consultancy</h3><p>Service work funds us and teaches us. It also absorbs every hour. If nothing is productised by the third engagement, we have accidentally started an engineering firm.</p></div>
+    </div>
+    <div class="pots">
+      <div class="hd">What it becomes</div>
+      <div class="item"><h3>The metric transfers</h3><p>Validated designs per GPU-hour is domain-agnostic. Whatever we learn about screening cheaply, surrogating aggressively and failing fast applies to any problem with a slow oracle.</p></div>
+      <div class="item"><h3>The compute layer</h3><p>Running solvers and models together efficiently is a real product: scheduling, caching, surrogate reuse, cost-aware search. Strong second act, weak first one, because it has no domain wedge and competes with well-funded infrastructure companies. Earn it by proving the loop somewhere specific first.</p></div>
+      <div class="item"><h3>Lab in the loop</h3><p>The architecture does not care whether the oracle is a solver or an experiment. Swap the solver adapter for a robotic rig and the constraint library for a protocol library, and this becomes a self-driving lab. Far larger prize, far slower loop. The right order is to prove the machinery where evaluations cost cents, then move to where they cost days.</p></div>
+      <div class="item"><h3>Research, not just engineering</h3><p>Engineering design is the proof of concept because the oracle is trustworthy and the answer is checkable. The same loop points at any field with a validated simulator and an unexplored design space.</p></div>
+      <div class="item"><h3>Owning the scoreboard</h3><p>Several of these fields have no public benchmark. Whoever publishes the standard comparison set defines what better means, and everyone else has to answer it.</p></div>
+      <div class="item"><h3>The surrogate library compounds</h3><p>Every customer run trains a model of a geometry family. Those models are useless to a competitor and increasingly valuable to us, which is the only durable data advantage available here.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="kill">
+  <div class="shead"><div class="snum">10</div><div><h2>When we stop</h2></div></div>
+  <div class="kill">
+    <h3>Kill criterion</h3>
+    <p class="rule">Take a design the customer already built and is proud of. Beat it by 15% or more on their primary metric, in their solver, inside their manufacturing constraints, within two weeks of wall-clock time.</p>
+    <p class="then">If we cannot, the solver was not good enough or the search space was not the bottleneck. Move to the next candidate. Do not spend another month tuning the agent.</p>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="shead"><div class="snum">11</div><div>
+    <h2>Open questions for the team</h2>
+    <p class="sub">Bring an answer, not an opinion.</p>
+  </div></div>
+  <div class="qs">
+    <div class="q"><div class="qn">Q1</div><p>Do we pick the boring problem that funds us, or the hard one we want to work on? They are not the same row in the matrix.</p></div>
+    <div class="q"><div class="qn">Q2</div><p>Are the weights right? Re-score the top ten independently and bring your numbers.</p></div>
+    <div class="q"><div class="qn">Q3</div><p>Which solver licences do we need and what do they cost per core-hour? This may decide the problem for us.</p></div>
+    <div class="q"><div class="qn">Q4</div><p>Who is the first customer by name? Not a segment. A company and a person we can email this week.</p></div>
+    <div class="q"><div class="qn">Q5</div><p>What do we do if a customer agrees the design is better and still will not build it? That failure is more likely than losing on performance.</p></div>
+    <div class="q"><div class="qn">Q6</div><p>What is the smallest experiment that tells us whether the agent layer beats a plain optimiser? If we cannot design that test, we do not have a thesis.</p></div>
+    <div class="q"><div class="qn">Q7</div><p>What autonomy level do we actually sell at? L1 is honest and slow, L3 is where the economics work. Guessing wrong sets the wrong price and the wrong expectation.</p></div>
+  </div>
+</section>
+
+<footer>Internal document · Not for distribution</footer>
+</main>
+
+<script>
+var CRIT=[
+ {k:"oracle",n:"Oracle",w:3},{k:"loop",n:"Loop",w:3},{k:"value",n:"Value",w:2},
+ {k:"search",n:"Search",w:2},{k:"proof",n:"Proof",w:3},{k:"access",n:"Access",w:2}
+];
+var DEF=[3,3,2,2,3,2];
+
+var DATA=[
+{t:"Cold plates and manifolds",n:"Liquid cooling for high-density electronics",d:"Thermal",s:[5,5,4,4,5,5],
+ w:"Flow paths, fin fields and manifold splits that move heat off a chip at the lowest pumping power.",
+ f:"Conjugate heat transfer solves in minutes and surrogates well. Parts can be printed or brazed in weeks, so the loop closes physically.",
+ b:"No standard public benchmark. Nearest analogues are ERCOFTAC and NASA turbulence cases. The gap is an opening.",
+ p:"Cut thermal resistance or pumping power 15% on a plate they already ship, at equal manufacturing cost.",
+ r:"Turbulence and boiling models limit how much simulated gain survives a real test loop."},
+
+{t:"Grid interconnection studies",n:"Load flow, short circuit and dynamic stability sweeps",d:"Power",s:[4,5,4,5,5,4],
+ w:"The study package a developer must submit before connecting generation or a large load to the network.",
+ f:"Deterministic well-established solvers, no physical build, and queue delays that cost real money every day.",
+ b:"IEEE 14, 118 and 300 bus cases, ACTIVSg synthetic grids, PGLib-OPF. Usable before we have a customer.",
+ p:"Reproduce a completed study on the same network model with matching results in a fraction of the billed hours.",
+ r:"Regulated deliverables need a licensed signature, and the partner who signs is also the incumbent we undercut."},
+
+{t:"Stellarator coil design",n:"Buildable coils under field error and structural limits",d:"Magnets",s:[5,4,5,5,4,4],
+ w:"Coil shapes that hit the required magnetic field while staying windable, assemblable and structurally survivable.",
+ f:"Open solvers, open configuration databases, very high value per design, and dozens of funded buyers.",
+ b:"QUASR configuration database, SIMSOPT and DESC reference cases, published NCSX and W7-X coil sets.",
+ p:"Hold field error fixed on a published coil set and cut winding complexity or peak structural stress measurably.",
+ r:"Small market, long procurement, and customers who treat coil design as crown-jewel IP."},
+
+{t:"Compact heat exchangers",n:"Additively manufactured cores and headers",d:"Thermal",s:[5,4,3,4,4,4],
+ w:"Heat exchanger cores with geometries that only additive manufacturing can produce.",
+ f:"Fast solvers, an enormous unexplored geometry space, and a manufacturing route that accepts complexity for free.",
+ b:"No standard benchmark. NIST AM-Bench covers the process side but not exchanger performance.",
+ p:"Match duty at lower volume or pressure drop against a brazed plate-fin baseline, then print and test.",
+ r:"Additive parts are expensive per unit, so the win must be large enough to justify the process switch."},
+
+{t:"Electric machine design",n:"Axial flux and PM motors, reduced rare earth topologies",d:"Magnets",s:[5,3,4,4,4,4],
+ w:"Rotor and stator geometry, winding layout and magnet placement for torque density and efficiency.",
+ f:"Electromagnetic solvers are fast and trusted. The space couples electromagnetic, thermal and structural limits, which is where humans give up.",
+ b:"Oak Ridge teardown models of production traction motors are the de-facto public baseline. No formal contest.",
+ p:"Beat a published traction motor on torque density at equal magnet mass and cooling.",
+ r:"Crowded field with strong in-house teams at every OEM and supplier."},
+
+{t:"HTS magnet architecture",n:"Cable layout, quench protection, screening currents",d:"Magnets",s:[4,3,5,4,4,3],
+ w:"How high-temperature superconducting tape is arranged, supported, cooled and protected when it goes normal.",
+ f:"Enormous value per magnet and a genuinely coupled electromagnetic, thermal and structural problem.",
+ b:"Published REBCO cable test campaigns and fusion magnet demonstrator results. No shared suite.",
+ p:"Show a winding pack with equal field and larger quench margin, or lower peak stress at equal field.",
+ r:"Quench modelling is not fully validated, so a simulated margin may not convince anyone."},
+
+{t:"Power magnetics",n:"Planar transformers and inductors for fast converters",d:"Power",s:[5,4,3,3,4,4],
+ w:"Core shape, winding geometry and material choice for high-frequency power conversion.",
+ f:"Very fast solvers, high unit volumes, and loss models that validate cheaply on a bench.",
+ b:"No standard set. Core loss datasets such as MagNet from Princeton are the closest public resource.",
+ p:"Equal power throughput at lower loss or smaller volume, confirmed on a bench measurement.",
+ r:"Low value per design, so this only works as a volume tool rather than a service."},
+
+{t:"Solver and mesh orchestration",n:"The workflow tax every other candidate also pays",d:"Cross-cut",s:[5,5,2,5,3,5],
+ w:"Getting from CAD to a clean mesh to a converged solve without a human babysitting it.",
+ f:"It is the real bottleneck in every row of this table, and it is the part we must build anyway.",
+ b:"ABC dataset and Fusion 360 Gallery for geometry. AIAA meshing workshop cases for quality.",
+ p:"Run a hundred varied geometries end to end with no manual intervention and a high convergence rate.",
+ r:"Low value on its own and it competes with free open-source tooling. A capability, not a company."},
+
+{t:"Photonic inverse design",n:"Couplers and splitters for co-packaged optics",d:"Photonics",s:[5,3,4,3,4,4],
+ w:"Sub-wavelength structures designed by gradient methods rather than drawn from a library.",
+ f:"Adjoint methods make gradients nearly free, and fabrication constraints are well characterised.",
+ b:"Ceviche Challenges, SPINS-B and Meep reference problems. One of the better-served fields.",
+ p:"Beat a published device on insertion loss or bandwidth under the same minimum feature size.",
+ r:"Already crowded, adjoint optimisation is standard practice, and the marginal value of an agent is unclear."},
+
+{t:"Package signal and power integrity",n:"Advanced packaging, interposers, delivery networks",d:"Electronics",s:[4,4,4,3,4,3],
+ w:"Keeping signals clean and power stable across chiplets, interposers and substrates.",
+ f:"Fast solvers, ferocious commercial pressure, and design rules that are already formalised.",
+ b:"No open standard set. Industry relies on internal test vehicles.",
+ p:"Meet the same eye-diagram and impedance targets with fewer layers or lower area.",
+ r:"Buyers are large semiconductor firms with mature internal tooling and long qualification cycles."},
+
+{t:"Topology optimisation with DFM",n:"Optimisation that respects real machine limits",d:"Structures",s:[4,4,3,4,4,5],
+ w:"Structural optimisation constrained by what a mill, press or printer can actually produce.",
+ f:"Mature solvers, open benchmark problems, and a documented gap between academic results and manufacturable parts.",
+ b:"MBB beam and the 88-line reference implementations. The GE jet engine bracket challenge is a real public target.",
+ p:"Match a published optimised part on stiffness while passing a shop quote without redrawing.",
+ r:"Every commercial FEA vendor ships a topology module. Differentiation is only in the constraints."},
+
+{t:"Chip floorplanning and macro placement",n:"Physical design of large digital blocks",d:"Semiconductor",s:[5,4,4,4,4,3],
+ w:"Where large blocks go on a die, and how that decision propagates into timing, congestion and power.",
+ f:"Extremely fast evaluation, open tooling, and a live public argument about whether learned methods beat classical ones.",
+ b:"ISPD placement contests, TILOS MacroPlacement, OpenROAD flows. Well defined and public.",
+ p:"Beat the OpenROAD baseline on wirelength and timing across the public benchmark circuits.",
+ r:"Heavily contested by EDA vendors and research labs, with a public credibility fight already underway."},
+
+{t:"Freeform optics and lens design",n:"Multi-element and freeform optical systems",d:"Optics",s:[5,4,3,3,4,4],
+ w:"Surface shapes and element spacing that hit an image quality target with fewer parts.",
+ f:"Ray tracing is essentially free, so evaluation cost is a non-issue. The space is high-dimensional and full of local minima.",
+ b:"Classic reference designs such as the Cooke triplet and double Gauss serve as informal baselines.",
+ p:"Equal image quality with one fewer element or a looser tolerance budget.",
+ r:"Existing optical design software is very mature and practitioners are conservative."},
+
+{t:"Inverse lithography and OPC",n:"Mask synthesis for advanced nodes",d:"Semiconductor",s:[5,3,5,4,4,2],
+ w:"Computing the mask pattern that prints the intended shape once diffraction has had its way.",
+ f:"Enormous value per node, a well-posed inverse problem, and existing public contest problems.",
+ b:"ICCAD contest problem sets on OPC and inverse lithography.",
+ p:"Better edge placement error at equal mask complexity on the public contest cases.",
+ r:"A handful of buyers on earth, all with large internal teams and deep vendor relationships."},
+
+{t:"Additive process parameters and supports",n:"Print settings, orientation and support strategy",d:"Manufacturing",s:[4,4,3,4,4,4],
+ w:"Choosing orientation, scan strategy and supports so the part comes out dimensionally correct and dense.",
+ f:"Fast thermal process models, and physical verification in days rather than years.",
+ b:"NIST AM-Bench is a genuine public benchmark series with measured data.",
+ p:"Lower distortion or support mass on an AM-Bench geometry, confirmed by print and scan.",
+ r:"Machine-specific and material-specific, so results may not transfer between printers."},
+
+{t:"Injection mould cooling and gating",n:"Runner layout, gate placement, conformal cooling",d:"Manufacturing",s:[4,4,2,4,4,4],
+ w:"Where plastic enters a mould and how heat leaves it, which sets cycle time and warpage.",
+ f:"Fast filling and cooling solvers, huge installed base, and cycle time converts directly to money.",
+ b:"No public benchmark set. Vendor tutorial geometries are the informal reference.",
+ p:"Cut cycle time or warpage on a real tool without changing the part geometry.",
+ r:"Low value per design and a cost-sensitive, fragmented buyer base."},
+
+{t:"Crash structure optimisation",n:"Energy absorption in vehicle body structures",d:"Mobility",s:[4,3,4,4,4,4],
+ w:"Section shapes, gauges and materials that absorb crash energy while meeting mass targets.",
+ f:"Explicit solvers are validated and public vehicle models exist, which is rare in structures.",
+ b:"NHTSA and NCAC public finite element vehicle models. Genuinely usable.",
+ p:"Equal crash performance at lower mass on a public vehicle model.",
+ r:"Runs are expensive and noisy, and homologation makes customers extremely conservative."},
+
+{t:"Wind turbine blade and rotor",n:"Aeroelastic design of large rotors",d:"Energy",s:[4,3,4,4,4,4],
+ w:"Blade shape, structure and control tuning that maximise energy capture within load limits.",
+ f:"Open reference turbines and open aeroelastic tooling make the benchmark free.",
+ b:"NREL 5MW and IEA 15MW reference turbines, OpenFAST. Well established.",
+ p:"Higher annual energy production at equal extreme and fatigue loads on a reference turbine.",
+ r:"A few large OEMs with strong internal teams and very long product cycles."},
+
+{t:"Satellite thermal design",n:"Radiators, heat pipes and orbital thermal balance",d:"Space",s:[4,3,3,4,4,3],
+ w:"Keeping every component within temperature limits across the orbit, with no convection to help.",
+ f:"Radiation-dominated physics models well, and mass saved on orbit is worth a lot.",
+ b:"No shared benchmark. ESA and NASA thermal model correlation cases are the closest.",
+ p:"Meet the same temperature limits at lower radiator area or heater power.",
+ r:"Small unit volumes and qualification cycles measured in years."},
+
+{t:"Regenerative cooling channels",n:"Rocket chamber wall thermal and structural life",d:"Space",s:[4,3,4,4,3,2],
+ w:"Coolant channel geometry in a chamber wall that survives extreme heat flux for enough cycles.",
+ f:"Coupled thermal and structural problem with a clear objective and a well-defined failure mode.",
+ b:"No open benchmark. Published test data from research engines is sparse.",
+ p:"Longer predicted cycle life at equal pressure drop on a published chamber geometry.",
+ r:"Few customers, all secretive, and several are export-controlled."},
+
+{t:"Electrolyser and fuel cell flow fields",n:"Bipolar plate channel design",d:"Energy",s:[3,3,4,4,3,4],
+ w:"Channel patterns that distribute reactant evenly while managing water and heat.",
+ f:"Large and growing market, and the geometry space is barely explored beyond serpentine and parallel patterns.",
+ b:"No standard benchmark. Published single-cell test protocols vary between groups.",
+ p:"Higher current density at equal pressure drop on a single-cell test rig.",
+ r:"Multiphase models are unreliable, so simulation results need physical confirmation early."},
+
+{t:"Battery pack thermal and runaway",n:"Cooling layout and propagation resistance",d:"Mobility",s:[3,3,4,4,3,4],
+ w:"Cell arrangement, cooling and barriers that keep temperature even and stop one failing cell taking the pack.",
+ f:"Safety requirements are hard constraints, which makes the objective unambiguous.",
+ b:"No standard geometry benchmark. PyBaMM and public degradation datasets cover cells, not packs.",
+ p:"Prevent propagation in a simulated single-cell failure at equal or lower pack mass.",
+ r:"Runaway physics is poorly predictive, so regulators and OEMs will demand physical testing regardless."},
+
+{t:"Two-phase and immersion cooling",n:"Loop-level design and boiling surfaces",d:"Thermal",s:[3,3,4,4,3,4],
+ w:"Designing systems where the coolant boils, which moves far more heat but is much harder to predict.",
+ f:"The performance ceiling is much higher than single-phase, and datacenter buyers are actively looking.",
+ b:"No standard benchmark. Pool boiling correlations vary widely between sources.",
+ p:"Higher critical heat flux or lower superheat on a test section, confirmed experimentally.",
+ r:"Boiling models are the weakest part of commercial CFD. The oracle may simply not be good enough."},
+
+{t:"Metasurfaces and conformal antennas",n:"Apertures on curved and constrained structures",d:"RF",s:[4,3,3,3,4,3],
+ w:"Element layout and unit cell design for antennas that must conform to a vehicle or a body.",
+ f:"Fast electromagnetic solvers and a combinatorial layout problem humans handle badly.",
+ b:"No shared set. Published reference antennas in the IEEE literature act as informal baselines.",
+ p:"Equal gain and bandwidth at lower profile or fewer elements, confirmed in a chamber.",
+ r:"Fragmented market with many small specialised buyers."},
+
+{t:"Inverter and HVDC converter design",n:"Topology, thermal and filter co-design",d:"Power",s:[4,3,4,3,4,3],
+ w:"Choosing switching topology, devices, thermal path and filtering together rather than in sequence.",
+ f:"Fast circuit simulation and a genuinely multi-domain trade-off that is currently done sequentially.",
+ b:"No standard benchmark. Published reference designs from device makers serve as baselines.",
+ p:"Higher efficiency or power density at equal cost against a published reference design.",
+ r:"Device availability and cost dominate the answer, and neither is something we model well."},
+
+{t:"Accelerator and imaging magnets",n:"Field quality under geometric tolerance",d:"Magnets",s:[4,3,4,3,4,3],
+ w:"Magnet geometry that holds field uniformity tight enough for beam optics or imaging.",
+ f:"Well-posed problem, excellent solvers, and buyers who already quantify field quality precisely.",
+ b:"Published magnet designs from major accelerator projects act as public baselines.",
+ p:"Equal field quality at lower conductor mass or looser required tolerance.",
+ r:"Very small number of buyers and procurement cycles measured in years."},
+
+{t:"Protection and substation design",n:"Coordination studies and equipment selection",d:"Power",s:[3,4,3,4,4,4],
+ w:"Setting protective devices so faults clear correctly without nuisance tripping.",
+ f:"Rule-heavy, repetitive, and currently done by hand against standards documents.",
+ b:"IEEE 13, 34 and 123 node test feeders. Public and widely used.",
+ p:"Produce a coordinated protection scheme on a public feeder that matches an expert-produced one.",
+ r:"More expert-system than optimisation, so the technical differentiation is thin."},
+
+{t:"Sheet metal forming and springback",n:"Die compensation for stamped parts",d:"Manufacturing",s:[4,3,3,4,4,3],
+ w:"Predicting how a stamped part springs back and compensating the tool geometry in advance.",
+ f:"Clear objective, expensive tool rework today, and physical verification within weeks.",
+ b:"Numisheet benchmark problems are a long-running public series with measured data.",
+ p:"Lower dimensional deviation than a compensated production die on a Numisheet case.",
+ r:"Material model accuracy caps how good the prediction can be, regardless of the search."},
+
+{t:"Ship hull and propeller design",n:"Hydrodynamic resistance and wake",d:"Marine",s:[4,3,3,4,4,3],
+ w:"Hull form and propeller geometry that reduce resistance and improve propulsive efficiency.",
+ f:"Excellent public benchmark hulls with measured towing tank data, which is unusually good ground truth.",
+ b:"KCS, KVLCC2 and JBC hulls from the Tokyo and Gothenburg CFD workshops.",
+ p:"Lower predicted resistance at equal displacement on a benchmark hull, validated against tank data.",
+ r:"Conservative industry, long build cycles, and classification society approval on top."},
+
+{t:"Superconducting qubit layout",n:"Chip floorplan, crosstalk and packaging",d:"Quantum",s:[4,3,4,4,3,3],
+ w:"Placing qubits, resonators and control lines so coupling is where you want it and nowhere else.",
+ f:"Electromagnetic simulation is well established, the layout space is combinatorial, and teams iterate slowly.",
+ b:"No public benchmark. Published chip layouts from research groups are the only reference.",
+ p:"Lower simulated crosstalk at equal connectivity on a published layout.",
+ r:"Device performance is dominated by fabrication and materials, not layout, so a layout win may not show up."},
+
+{t:"Fission core and fuel cycle",n:"Coupled neutronics and thermal hydraulics",d:"Nuclear",s:[4,2,5,4,3,2],
+ w:"Fuel loading patterns and core geometry that maximise burnup within safety margins.",
+ f:"Very high value per decision and a large combinatorial space that is currently searched heuristically.",
+ b:"C5G7 and the VERA core physics progression problems are real public benchmarks.",
+ p:"Higher cycle length at equal peaking factor on a VERA benchmark core.",
+ r:"Regulatory approval dominates everything, and nobody adopts a new method mid-licence."},
+
+{t:"Radiation shielding layout",n:"Material and geometry selection for dose limits",d:"Nuclear",s:[4,3,3,4,4,3],
+ w:"Arranging shielding materials to meet dose limits at minimum mass or cost.",
+ f:"Monte Carlo transport is trusted, the objective is a single number, and layered material choice is combinatorial.",
+ b:"SINBAD shielding benchmark database contains measured experimental data.",
+ p:"Meet the same dose limit at lower shield mass on a SINBAD case.",
+ r:"Monte Carlo runs are slow, which pushes hard on the evaluation budget."},
+
+{t:"Building energy and HVAC",n:"Envelope, system sizing and control strategy",d:"Buildings",s:[4,4,2,4,4,5],
+ w:"Designing the envelope and mechanical systems together to cut energy use across a year of operation.",
+ f:"Free open solvers, open weather data, and a public validation standard. Nothing blocks us from starting today.",
+ b:"ASHRAE Standard 140 validation suite and DOE prototype building models.",
+ p:"Lower annual energy use at equal comfort on a DOE prototype building.",
+ r:"Very low value per design and a fee-sensitive, fragmented buyer base."},
+
+{t:"Turbine blade cooling passages",n:"Internal passages and film cooling layout",d:"Aero",s:[3,2,5,4,2,2],
+ w:"Internal cooling geometry that lets a blade survive gas temperatures above its melting point.",
+ f:"Extremely high value per design and a genuinely hard coupled problem.",
+ b:"No open benchmark with measured data. Published cascade experiments are partial.",
+ p:"Higher predicted cooling effectiveness at equal coolant flow on a published cascade geometry.",
+ r:"Two or three buyers worldwide, all with elite internal teams and no reason to talk to us."},
+
+{t:"Aeroelastic flutter and wing design",n:"Coupled aerodynamic and structural wing optimisation",d:"Aero",s:[3,2,5,4,3,2],
+ w:"Wing shape and structure that meet aerodynamic targets without hitting a flutter boundary.",
+ f:"Very high value and a strongly coupled problem where humans iterate slowly between disciplines.",
+ b:"AIAA Common Research Model and Drag Prediction Workshop cases. Public and well characterised.",
+ p:"Lower drag at equal structural mass and flutter margin on the Common Research Model.",
+ r:"Certification makes adoption glacial, and the buyer list is very short."},
+
+{t:"Fatigue and fracture life",n:"Life prediction under real load spectra",d:"Structures",s:[3,2,4,4,3,3],
+ w:"Predicting how long a component lasts under variable loading, and shaping it to last longer.",
+ f:"Universal problem across every mechanical industry, and current practice is heavily rule-of-thumb.",
+ b:"No standard design benchmark. Public test coupon databases exist but not design problems.",
+ p:"Longer predicted life at equal mass, backed by a coupon or component test.",
+ r:"Life prediction has wide scatter, so a modelled improvement is hard to defend."},
+
+{t:"Composite layup and cryogenic tanks",n:"Ply sequencing under permeation and load",d:"Structures",s:[3,2,4,4,3,3],
+ w:"Fibre orientation and ply order that carry load while keeping cryogenic fluid from leaking through.",
+ f:"Large combinatorial space, high value in space and hydrogen applications, and slow manual iteration.",
+ b:"No public benchmark. Published NASA composite cryotank test programmes are the closest reference.",
+ p:"Equal burst strength and permeation at lower laminate mass, confirmed on a subscale article.",
+ r:"Microcracking and permeation models are weak, so physical testing dominates the timeline."},
+
+{t:"Weld residual stress and qualification",n:"Process window to allowable properties",d:"Manufacturing",s:[3,2,3,4,3,3],
+ w:"Predicting distortion and residual stress from welding, and choosing a sequence that minimises both.",
+ f:"Expensive and slow to qualify today, with a large sequencing space nobody searches properly.",
+ b:"NeT and R6 residual stress benchmark problems have measured data.",
+ p:"Lower measured distortion using a proposed weld sequence on a benchmark specimen.",
+ r:"Simulation is slow and material models are uncertain, which squeezes the evaluation budget hard."},
+
+{t:"Gear and drivetrain NVH",n:"Micro-geometry and noise behaviour",d:"Mobility",s:[3,3,3,4,3,3],
+ w:"Tooth micro-geometry and shaft layout that reduce noise and vibration under load.",
+ f:"Well-defined objective, fast enough models, and a space engineers currently explore by rules of thumb.",
+ b:"No public benchmark set. AGMA standard cases act as informal references.",
+ p:"Lower predicted transmission error at equal load capacity, confirmed on a test rig.",
+ r:"Noise correlates poorly between model and rig, and buyers trust rigs."},
+
+{t:"Piping stress and plant layout",n:"Routing, supports and expansion loops",d:"Process",s:[3,4,2,4,4,3],
+ w:"Routing pipe through a plant so it meets stress codes with the least material and interference.",
+ f:"Code-driven and repetitive, with a routing problem that is combinatorial and currently manual.",
+ b:"ASME B31 code example problems serve as verification cases.",
+ p:"Code-compliant routing with less pipe and fewer supports than a hand-drawn layout.",
+ r:"Low value per design and dominated by incumbent plant design software."},
+
+{t:"Microfluidic device design",n:"Channel networks for mixing and separation",d:"Bio",s:[4,3,2,4,4,4],
+ w:"Channel geometry that mixes, sorts or separates at low Reynolds number.",
+ f:"Laminar flow simulates accurately and cheaply, and devices can be fabricated in days.",
+ b:"No standard benchmark. Published mixer geometries are the informal comparison.",
+ p:"Higher mixing efficiency at lower pressure drop, confirmed on a fabricated chip.",
+ r:"Small market with low willingness to pay, mostly academic buyers."},
+
+{t:"Acoustic and noise design",n:"Enclosures, ducts and transformer hum",d:"Cross-cut",s:[3,3,2,4,3,4],
+ w:"Shaping enclosures and paths to reduce radiated noise at specific frequencies.",
+ f:"Regulatory noise limits create hard constraints, and the geometry space is large.",
+ b:"No standard set. Published anechoic measurements serve as references.",
+ p:"Lower measured sound power at equal size and airflow.",
+ r:"Low value per design and results that depend heavily on installation."},
+
+{t:"Plasma etch and deposition uniformity",n:"Chamber and process design for wafer uniformity",d:"Semiconductor",s:[3,2,5,4,3,2],
+ w:"Chamber geometry and process settings that give the same result across an entire wafer.",
+ f:"Enormous value per point of yield, and a strongly coupled plasma, flow and surface chemistry problem.",
+ b:"No public benchmark. Plasma models are validated internally by equipment makers.",
+ p:"Improved simulated uniformity on a published chamber geometry, then confirmed on a tool.",
+ r:"Plasma chemistry models are unreliable and the data needed to fix them is closely held."},
+
+{t:"Certification evidence generation",n:"Tying analysis results to regulatory argument",d:"Cross-cut",s:[3,4,3,5,3,3],
+ w:"Assembling the analysis, test and traceability package a regulator or auditor requires.",
+ f:"Enormous manual effort, highly structured output, and language models are genuinely good at this shape of work.",
+ b:"No benchmark. Published certification guidance documents define the target.",
+ p:"Produce a package an experienced reviewer accepts with fewer corrections than a human first draft.",
+ r:"Not really an engineering search problem. Different company, different skills."},
+
+{t:"Rocket injectors and stability",n:"Combustion instability prediction and mitigation",d:"Space",s:[2,2,5,5,2,2],
+ w:"Injector geometry that mixes propellant well without exciting combustion instability.",
+ f:"Very high value, very large space, and the current method is expensive trial and error.",
+ b:"Continuously variable resonance combustor experiments and published test campaigns. Sparse.",
+ p:"Predict the stability boundary of a published injector before testing it.",
+ r:"Instability prediction is not solved. The oracle does not exist, so there is nothing to search against."},
+
+{t:"Tritium blanket and divertor",n:"Coupled neutronics, thermal and tritium transport",d:"Fusion",s:[3,1,5,5,2,2],
+ w:"The component that breeds fuel and absorbs the heat, coupling neutronics, thermal, structural and chemistry.",
+ f:"Every fusion company needs it, nobody has one that works, and the space is huge.",
+ b:"FNG and ITER shielding benchmarks cover neutronics only, not the integrated component.",
+ p:"Higher tritium breeding ratio at equal structural margin on a published blanket concept.",
+ r:"Cannot be validated without a neutron source that does not exist yet. The loop does not close."},
+
+{t:"Hypersonic TPS and inlets",n:"Coupled aerothermal and ablation",d:"Aero",s:[2,1,5,5,2,1],
+ w:"Surfaces and materials that survive sustained hypersonic flight.",
+ f:"Extremely high value and a search space that is essentially unexplored.",
+ b:"No accessible benchmark. Most relevant data is classified.",
+ p:"There is no proof we could show without a flight test or a tunnel we cannot access.",
+ r:"Export control and clearance requirements make this inaccessible to us. Rule it out."},
+
+{t:"Rare-earth-free permanent magnets",n:"New magnetic phases and processing routes",d:"Materials",s:[2,1,5,5,1,2],
+ w:"Finding magnetic compounds that match neodymium performance without the supply chain risk.",
+ f:"Strategically enormous, and a genuinely open scientific question.",
+ b:"Materials Project, JARVIS and MatBench cover property prediction, not synthesis outcome.",
+ p:"None available in a startup timeframe. Confirmation requires synthesis and characterisation.",
+ r:"The loop closes in a lab over years. Different company, different funding profile."},
+
+{t:"Radiation-tolerant first wall alloys",n:"Damage tolerance under neutron flux",d:"Materials",s:[1,1,5,5,1,1],
+ w:"Structural materials that survive fusion neutron damage for a plant lifetime.",
+ f:"Nothing about it fits. Kept in the list as the reference point for the high-value, no-loop trap.",
+ b:"No benchmark. Irradiation data is sparse and facility-limited.",
+ p:"Impossible without a fusion-spectrum neutron source.",
+ r:"The oracle does not exist and neither does the test facility. Highest value, lowest feasibility."},
+
+{t:"Solid electrolytes and catalysts",n:"Ionic conductors and PGM-free catalysis",d:"Materials",s:[2,1,5,5,1,2],
+ w:"Materials for solid-state batteries and electrolysers that avoid scarce elements.",
+ f:"Strong public datasets exist, but the gap between predicted and synthesisable remains wide.",
+ b:"Open Catalyst OC20 and OC22, MatBench Discovery. Genuinely good benchmarks for prediction.",
+ p:"A prediction benchmark result is achievable. A validated material is not.",
+ r:"Winning the benchmark and failing in the lab is the normal outcome here."}
+];
+
+var BUYERS={
+"Cold plates and manifolds":"AI datacenter operators, hyperscaler hardware teams, power electronics makers, cold plate suppliers.",
+"Grid interconnection studies":"Renewable and storage developers, IPPs, datacenter site teams, engineering consultancies.",
+"Stellarator coil design":"Fusion companies, accelerator labs, HTS magnet builders, national programmes.",
+"Compact heat exchangers":"Aerospace and process equipment makers, additive service bureaus, cryogenic system builders.",
+"Electric machine design":"Automotive and aerospace OEMs, motor suppliers, industrial drive makers.",
+"HTS magnet architecture":"Fusion companies, magnet integrators, imaging and accelerator manufacturers.",
+"Power magnetics":"Power supply and converter makers, EV charging, datacenter power vendors.",
+"Solver and mesh orchestration":"Any engineering team running simulation. Sold as tooling, not as a design service.",
+"Photonic inverse design":"Silicon photonics foundries, co-packaged optics teams, transceiver makers.",
+"Package signal and power integrity":"Semiconductor firms, OSATs, substrate and interposer suppliers.",
+"Topology optimisation with DFM":"Aerospace and automotive structures teams, contract manufacturers, additive bureaus.",
+"Chip floorplanning and macro placement":"Fabless semiconductor firms, EDA vendors, open silicon projects.",
+"Freeform optics and lens design":"Camera and sensor module makers, AR and metrology instrument builders.",
+"Inverse lithography and OPC":"Leading-edge foundries, mask shops, computational lithography vendors.",
+"Additive process parameters and supports":"Additive service bureaus, machine makers, aerospace and medical part producers.",
+"Injection mould cooling and gating":"Tool and die shops, moulders, consumer and automotive part makers.",
+"Crash structure optimisation":"Automotive OEMs and tier-one body structure suppliers.",
+"Wind turbine blade and rotor":"Turbine OEMs, blade manufacturers, independent design houses.",
+"Satellite thermal design":"Satellite primes, smallsat constellation operators, thermal hardware suppliers.",
+"Regenerative cooling channels":"Launch companies, engine developers, propulsion research programmes.",
+"Electrolyser and fuel cell flow fields":"Electrolyser and fuel cell makers, bipolar plate suppliers, energy majors.",
+"Battery pack thermal and runaway":"Automotive OEMs, pack integrators, grid storage system builders.",
+"Two-phase and immersion cooling":"Datacenter operators, cooling hardware vendors, power electronics makers.",
+"Metasurfaces and conformal antennas":"Automotive radar, satcom terminal makers, defence and avionics suppliers.",
+"Inverter and HVDC converter design":"Inverter manufacturers, grid equipment vendors, traction and drive suppliers.",
+"Accelerator and imaging magnets":"National labs, accelerator projects, medical imaging manufacturers.",
+"Protection and substation design":"Utilities, distribution operators, electrical engineering consultancies.",
+"Sheet metal forming and springback":"Automotive stampers, tool and die shops, appliance manufacturers.",
+"Ship hull and propeller design":"Shipyards, propeller makers, naval architecture practices, retrofit specialists.",
+"Superconducting qubit layout":"Quantum hardware companies, national quantum programmes, foundry partners.",
+"Fission core and fuel cycle":"Utilities, SMR developers, fuel vendors, national nuclear operators.",
+"Radiation shielding layout":"Nuclear operators, medical accelerator makers, space and defence integrators.",
+"Building energy and HVAC":"Architecture and MEP practices, developers, building system vendors.",
+"Turbine blade cooling passages":"Gas turbine and jet engine manufacturers. A very short list.",
+"Aeroelastic flutter and wing design":"Aircraft primes, advanced air mobility developers, research programmes.",
+"Fatigue and fracture life":"Any structural OEM. Broad, shallow, and hard to focus.",
+"Composite layup and cryogenic tanks":"Launch companies, hydrogen storage developers, composite fabricators.",
+"Weld residual stress and qualification":"Heavy fabrication, pressure vessel makers, shipyards, nuclear suppliers.",
+"Gear and drivetrain NVH":"Transmission and gearbox makers, EV drivetrain suppliers, wind gearbox vendors.",
+"Piping stress and plant layout":"EPC contractors, process plant owners, chemical and energy operators.",
+"Microfluidic device design":"Diagnostics companies, lab equipment makers, academic and biotech groups.",
+"Acoustic and noise design":"Appliance and HVAC makers, transformer manufacturers, automotive suppliers.",
+"Plasma etch and deposition uniformity":"Semiconductor equipment makers and their process development teams.",
+"Certification evidence generation":"Regulated manufacturers in aviation, medical devices, nuclear and rail.",
+"Rocket injectors and stability":"Launch companies and engine developers. Small and secretive.",
+"Tritium blanket and divertor":"Fusion companies and national fusion programmes.",
+"Hypersonic TPS and inlets":"Defence primes and government programmes. Largely closed to us.",
+"Rare-earth-free permanent magnets":"Magnet producers, automotive OEMs, defence supply chain programmes.",
+"Radiation-tolerant first wall alloys":"Fusion programmes and materials research institutes.",
+"Solid electrolytes and catalysts":"Battery and electrolyser makers, chemical companies, research consortia."
+};
+
+var sortKey="total", sortDir=-1, filter="All", openId=null;
+var RAMP=["var(--s1)","var(--s2)","var(--s3)","var(--s4)","var(--s5)"];
+DATA.forEach(function(d,i){d.id="c"+i});
+var domains=["All"].concat(Array.from(new Set(DATA.map(function(d){return d.d}))).sort());
+
+function total(row){
+  var sum=0,max=0;
+  CRIT.forEach(function(c,i){sum+=row.s[i]*c.w;max+=5*c.w});
+  return max===0?0:Math.round(sum/max*100);
+}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+
+function drawWeights(){
+  var el=document.getElementById("weights");
+  el.innerHTML="";
+  CRIT.forEach(function(c){
+    var d=document.createElement("div");
+    d.className="wctl";
+    d.innerHTML='<label>'+c.n+' weight</label><div class="stepper">'+
+      '<button aria-label="Decrease '+c.n+' weight" data-k="'+c.k+'" data-dir="-1"'+(c.w<=0?" disabled":"")+'>&minus;</button>'+
+      '<span class="val">'+c.w+'</span>'+
+      '<button aria-label="Increase '+c.n+' weight" data-k="'+c.k+'" data-dir="1"'+(c.w>=4?" disabled":"")+'>+</button></div>';
+    el.appendChild(d);
+  });
+  var r=document.createElement("button");
+  r.className="reset";r.textContent="Reset weights";
+  r.onclick=function(){CRIT.forEach(function(c,i){c.w=DEF[i]});drawWeights();draw()};
+  el.appendChild(r);
+  Array.prototype.forEach.call(el.querySelectorAll(".stepper button"),function(b){
+    b.onclick=function(){
+      var key=b.getAttribute("data-k");
+      CRIT.forEach(function(c){
+        if(c.k===key){c.w=Math.max(0,Math.min(4,c.w+Number(b.getAttribute("data-dir"))))}
+      });
+      drawWeights();draw();
+    };
+  });
+}
+
+function drawChips(){
+  var el=document.getElementById("chips");
+  el.innerHTML="";
+  domains.forEach(function(d){
+    var b=document.createElement("button");
+    b.className="chip";b.textContent=d;
+    b.setAttribute("aria-pressed",filter===d);
+    b.onclick=function(){filter=d;drawChips();draw()};
+    el.appendChild(b);
+  });
+}
+
+function detailHTML(r){
+  var parts=CRIT.map(function(c,i){return "<span>"+c.n+" <b>"+r.s[i]+"</b></span>"}).join("");
+  return '<tr class="detail"><td colspan="9"><div class="dpanel">'+
+    '<div class="dh">'+esc(r.t)+'</div><div class="dgrid">'+
+      '<div class="f"><h4>What it is</h4><p>'+esc(r.w)+'</p></div>'+
+      '<div class="f"><h4>Why it fits</h4><p>'+esc(r.f)+'</p></div>'+
+      '<div class="f"><h4>Benchmark</h4><p>'+esc(r.b)+'</p></div>'+
+      '<div class="f"><h4>Proof point</h4><p>'+esc(r.p)+'</p></div>'+
+      '<div class="f risk"><h4>Main risk</h4><p>'+esc(r.r)+'</p></div>'+
+    '</div><div class="dscores">'+parts+'<span>Weighted <b>'+r.total+'</b></span></div></div></td></tr>';
+}
+
+function ranked(){
+  return DATA.map(function(r){var o={};for(var k in r){o[k]=r[k]}o.total=total(r);return o})
+             .sort(function(a,b){return b.total-a.total});
+}
+
+function drawPicks(top){
+  var el=document.getElementById("picks");
+  el.innerHTML=top.map(function(r,i){
+    var scores=CRIT.map(function(c,j){return c.n+" <b>"+r.s[j]+"</b>"}).join("<br>");
+    var buyers=BUYERS[r.t]?'<div class="who">Buyers: '+esc(BUYERS[r.t])+'</div>':"";
+    return '<div class="pcard"><div class="side">'+
+      '<div class="rank">0'+(i+1)+'</div><div class="lab">'+esc(r.d)+' · score '+r.total+'</div>'+
+      buyers+'<div class="scr">'+scores+'</div></div>'+
+      '<div class="body"><h3>'+esc(r.t)+'</h3>'+
+      '<p>'+esc(r.w)+'</p>'+
+      '<p><strong>Why it fits:</strong> '+esc(r.f)+'</p>'+
+      '<div class="split"><div class="box"><h4>Proof point</h4><p>'+esc(r.p)+'</p></div>'+
+      '<div class="box risk"><h4>Main risk</h4><p>'+esc(r.r)+'</p></div></div>'+
+      '<p class="bench"><b>Benchmark</b>'+esc(r.b)+'</p></div></div>';
+  }).join("");
+}
+
+function draw(){
+  var all=ranked();
+  var top=all.slice(0,3);
+  var topIds={};top.forEach(function(r){topIds[r.id]=1});
+  drawPicks(top);
+
+  var tb=document.getElementById("rows");
+  var rows=DATA.filter(function(r){return filter==="All"||r.d===filter})
+               .map(function(r){var o={};for(var k in r){o[k]=r[k]}o.total=total(r);o.pick=topIds[r.id]?1:0;return o});
+  var idx=-1;CRIT.forEach(function(c,i){if(c.k===sortKey){idx=i}});
+  rows.sort(function(a,b){
+    var av=sortKey==="total"?a.total:a.s[idx];
+    var bv=sortKey==="total"?b.total:b.s[idx];
+    if(av!==bv){return (av-bv)*sortDir}
+    return b.total-a.total;
+  });
+  tb.innerHTML=rows.map(function(r){
+    var open=openId===r.id;
+    var main='<tr class="row'+(r.pick?" is-pick":"")+(open?" open":"")+'" data-id="'+r.id+'" tabindex="0" role="button" aria-expanded="'+open+'">'+
+      '<td class="name"><span class="t"><span class="car">&#9654;</span>'+esc(r.t)+(r.pick?'<span class="pick">PICK</span>':'')+'</span><span class="n">'+esc(r.n)+'</span></td>'+
+      '<td class="dom">'+esc(r.d)+'</td>'+
+      r.s.map(function(v){return '<td class="sc"><span style="background:'+RAMP[v-1]+';color:'+(v>=4?"#fff":"var(--graphite)")+'">'+v+'</span></td>'}).join("")+
+      '<td class="tot"><span class="totnum">'+r.total+'</span><span class="bar"><i style="width:'+r.total+'%"></i></span></td></tr>';
+    return main+(open?detailHTML(r):"");
+  }).join("");
+
+  Array.prototype.forEach.call(tb.querySelectorAll("tr.row"),function(tr){
+    var toggle=function(){
+      var id=tr.getAttribute("data-id");
+      openId=(openId===id)?null:id;
+      draw();
+    };
+    tr.onclick=toggle;
+    tr.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle()}};
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll("th.sortable"),function(th){
+    var on=th.getAttribute("data-k")===sortKey;
+    th.setAttribute("aria-sort",on?(sortDir===-1?"descending":"ascending"):"none");
+    var label=th.textContent.replace(/[\u25B2\u25BC]/g,"").trim();
+    th.innerHTML=label+(on?' <span class="arrow">'+(sortDir===-1?"\u25BC":"\u25B2")+'</span>':"");
+  });
+}
+
+Array.prototype.forEach.call(document.querySelectorAll("th.sortable"),function(th){
+  var go=function(){
+    var k=th.getAttribute("data-k");
+    if(sortKey===k){sortDir*=-1}else{sortKey=k;sortDir=-1}
+    draw();
+  };
+  th.onclick=go;
+  th.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}};
+});
+
+drawWeights();drawChips();draw();
+</script>
+</body>
+</html>
